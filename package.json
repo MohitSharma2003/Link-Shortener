@@ -1,0 +1,31 @@
+{
+  "name": "link-shortener",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev --respawn --transpile-only src/app.ts",
+    "build": "tcs",
+    "start": "node dist/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "dotenv": "^17.4.1",
+    "express": "^5.2.1",
+    "nanoid": "^5.1.7",
+    "nodemon": "^3.1.14",
+    "notenv": "^2.0.3",
+    "prisma": "^6.19.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.6.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^6.0.2"
+  }
+}
