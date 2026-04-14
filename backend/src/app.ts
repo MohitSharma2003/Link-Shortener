@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express'
 import dotenv from 'dotenv'
+import cors from 'cors';
 import { generateShortCode } from './services/LinkService'
 import prisma from './db'
 import { log } from 'node:console'
@@ -8,6 +9,9 @@ import { log } from 'node:console'
 
 dotenv.config()
 const app = express();
+
+app.use(cors());
+
 
 //middleware to parse JSON bodies
 app.use(express.json());
