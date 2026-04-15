@@ -47,7 +47,7 @@ app.post('/shorten', async (req: Request, res: Response) => {
 
 // --- Redirection & Analytics Route ---
 app.get('/:code', async (req: Request, res: Response) => {
-    const { code } = req.params;
+    const code = req.params.code as string;
 
     try {
         // Step 1: Find the link first (using findFirst avoids the unique constraint error)
