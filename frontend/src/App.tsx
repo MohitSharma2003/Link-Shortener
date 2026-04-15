@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
-import { Link2, Copy, Zap, BarChart3, Clock3, Loader2 } from 'lucide-react'
+import { Link2, Copy, Zap, Clock3, Loader2 } from 'lucide-react'
 
 // Define the shape of our Link object based on your backend schema
 interface LinkRecord {
