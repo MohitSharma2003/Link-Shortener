@@ -42,7 +42,6 @@ function App() {
     }
   }
 
-  // Updated to use the production URL and trigger the popup message
   const copyToClipboard = (code: string) => {
     const fullUrl = `${API_BASE_URL}/${code}`;
     navigator.clipboard.writeText(fullUrl);
@@ -114,7 +113,6 @@ function App() {
                     <Copy size={20} />
                   </button>
                   
-                  {/* Floating Copied Message */}
                   {showCopiedMessage && (
                     <span className="absolute -bottom-8 left-0 text-[10px] bg-sky-500 text-white px-2 py-0.5 rounded-full font-bold animate-bounce shadow-lg">
                       COPIED!
@@ -126,7 +124,18 @@ function App() {
                   </a>
                 </div>
               </div>
-              <p className="text-4xl font-mono text-white truncate border-b border-gray-800 pb-4">lnk.io/{currentShortLink.shortCode}</p>
+              
+              {/* Clickable Short Link text */}
+              <a 
+                href={`${API_BASE_URL}/${currentShortLink.shortCode}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group inline-block w-full"
+              >
+                <p className="text-4xl font-mono text-white truncate border-b border-gray-800 pb-4 group-hover:text-sky-400 transition-colors">
+                    lnk.io/{currentShortLink.shortCode}
+                </p>
+              </a>
               <p className="text-xs text-gray-600 mt-3 truncate">{currentShortLink.originalUrl}</p>
             </div>
           )}
@@ -148,7 +157,15 @@ function App() {
                     <Link2 size={24} className="text-sky-600"/>
                 </div>
                 <div className="md:col-span-7 space-y-1">
-                    <p className="text-xl font-mono text-sky-400">lnk.io/{link.shortCode}</p>
+                    {/* Clickable Short Link in History */}
+                    <a 
+                      href={`${API_BASE_URL}/${link.shortCode}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-xl font-mono text-sky-400 hover:underline block w-fit"
+                    >
+                      lnk.io/{link.shortCode}
+                    </a>
                     <p className="text-sm text-gray-600 truncate">{link.originalUrl}</p>
                 </div>
                 <div className="md:col-span-2 flex flex-col items-end md:items-center text-gray-400">
