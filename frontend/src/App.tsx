@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
-import { Link2, Copy, Zap, Clock3, Loader2 } from 'lucide-react'
+import { Link2, Copy, Zap, Clock3, Loader2, ExternalLink } from 'lucide-react'
 
 // Define the shape of our Link object based on your backend schema
 interface LinkRecord {
@@ -10,7 +10,8 @@ interface LinkRecord {
   clicks: number;
 }
 
-// const API_BASE_URL = "https://lnk-io-backend.onrender.com";
+// Using your live Render URL consistently
+const API_BASE_URL = "https://lnk-io-backend.onrender.com";
 
 function App() {
   const [originalUrl, setOriginalUrl] = useState('')
@@ -18,6 +19,7 @@ function App() {
   const [currentShortLink, setCurrentShortLink] = useState<LinkRecord | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showCopiedMessage, setShowCopiedMessage] = useState(false);
 
   const handleShorten = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +28,7 @@ function App() {
     setCurrentShortLink(null)
 
     try {
-      const response = await axios.post("https://lnk-io-backend.onrender.com/shorten", { originalUrl });
+      const response = await axios.post(`${API_BASE_URL}/shorten`, { originalUrl });
       const newLink = response.data;
       setCurrentShortLink(newLink);
       // Add the new link to the top of the history list
@@ -40,20 +42,25 @@ function App() {
     }
   }
 
+  // Updated to use the production URL and trigger the popup message
   const copyToClipboard = (code: string) => {
-    const fullUrl = `http://localhost:5000/${code}`
-    navigator.clipboard.writeText(fullUrl)
+    const fullUrl = `${API_BASE_URL}/${code}`;
+    navigator.clipboard.writeText(fullUrl);
+    
+    setShowCopiedMessage(true);
+    setTimeout(() => {
+      setShowCopiedMessage(false);
+    }, 2000);
   }
 
   return (
     <div className="min-h-screen bg-[#0d1117] text-white flex flex-col font-sans">
       
-      {/* 1. Header (LOGO ON LEFT, BIGGER) */}
+      {/* 1. Header */}
       <header className="w-full border-b border-gray-800 bg-[#0d1117]/80 backdrop-blur-sm sticky top-0 z-50">
         <nav className="max-w-[1700px] mx-auto flex items-center justify-between p-5 md:px-10">
           <div className="flex items-center gap-3">
             <Zap className="text-sky-400" size={36} strokeWidth={2.5}/>
-            {/* Unique Name & Bigger Logo */}
             <span className="text-3xl font-extrabold tracking-tighter">lnk<span className="text-sky-500">.io</span></span>
           </div>
           <div className="flex gap-4 text-sm text-gray-400">
@@ -96,19 +103,25 @@ function App() {
           {error && <p className="text-red-400 mt-2 text-sm">{error}</p>}
         </section>
 
-        {/* 3. Right Column (The Semi-Opaque "Empty Space" Utilizer) */}
+        {/* 3. Right Column (Active Link Card) */}
         <aside className="xl:col-span-4 space-y-8 xl:mt-20">
-          
-          {/* Newest Link (Active State) */}
           {currentShortLink && (
             <div className="bg-[#161b22]/70 backdrop-blur-xl border border-sky-600/30 p-6 rounded-3xl shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm font-semibold text-sky-400">Your new link is ready:</p>
-                <div className="flex gap-2">
-                  <button onClick={() => copyToClipboard(currentShortLink.shortCode)} className="p-2 hover:bg-[#0d1117] rounded-md text-gray-400 hover:text-white">
+                <div className="flex gap-2 relative">
+                  <button onClick={() => copyToClipboard(currentShortLink.shortCode)} className="p-2 hover:bg-[#0d1117] rounded-md text-gray-400 hover:text-white transition-colors">
                     <Copy size={20} />
                   </button>
-                  <a href={`https://lnk-io-backend.onrender.com${currentShortLink.shortCode}`} target="_blank" rel="noreferrer" className="p-2 hover:bg-[#0d1117] rounded-md text-gray-400 hover:text-white">
+                  
+                  {/* Floating Copied Message */}
+                  {showCopiedMessage && (
+                    <span className="absolute -bottom-8 left-0 text-[10px] bg-sky-500 text-white px-2 py-0.5 rounded-full font-bold animate-bounce shadow-lg">
+                      COPIED!
+                    </span>
+                  )}
+
+                  <a href={`${API_BASE_URL}/${currentShortLink.shortCode}`} target="_blank" rel="noreferrer" className="p-2 hover:bg-[#0d1117] rounded-md text-gray-400 hover:text-white transition-colors">
                     <Link2 size={20} />
                   </a>
                 </div>
@@ -117,31 +130,10 @@ function App() {
               <p className="text-xs text-gray-600 mt-3 truncate">{currentShortLink.originalUrl}</p>
             </div>
           )}
-
-          {/* Features Grid (Utility State) */}
-          {/* {!currentShortLink && (
-            <div className="grid grid-cols-2 gap-4 bg-[#161b22]/50 p-6 rounded-3xl border border-gray-800">
-               <div className="border border-gray-800 p-5 rounded-2xl flex flex-col gap-2">
-                    <Clock3 size={24} className="text-sky-500" />
-                    <p className="font-semibold text-lg">Instant</p>
-                    <p className="text-xs text-gray-500">Links resolve in milliseconds.</p>
-               </div>
-               <div className="border border-gray-800 p-5 rounded-2xl flex flex-col gap-2">
-                    <BarChart3 size={24} className="text-sky-500" />
-                    <p className="font-semibold text-lg">Analytics</p>
-                    <p className="text-xs text-gray-500">Track clicks and sources.</p>
-               </div>
-               <div className="border border-gray-800 p-5 rounded-2xl flex flex-col gap-2 col-span-2">
-                    <Zap size={24} className="text-sky-500" />
-                    <p className="font-semibold text-lg">Real World Utility</p>
-                    <p className="text-xs text-gray-500">Designed for professional use cases.</p>
-               </div>
-            </div>
-          )} */}
         </aside>
       </main>
 
-      {/* 4. History List (Responsive Infrastructure) */}
+      {/* 4. History List */}
       <section className="max-w-[1700px] mx-auto w-full p-6 md:p-10 md:pt-0 mb-10">
         <div className="bg-[#161b22]/60 backdrop-blur border border-gray-800 p-6 md:p-8 rounded-3xl mt-10 xl:mt-0">
           <div className="flex items-center justify-between mb-6">
@@ -167,6 +159,9 @@ function App() {
                     <button onClick={() => copyToClipboard(link.shortCode)} className="p-2 hover:bg-[#161b22] rounded-md text-gray-400 hover:text-white">
                         <Copy size={20} />
                     </button>
+                    <a href={`${API_BASE_URL}/${link.shortCode}`} target="_blank" rel="noreferrer" className="p-2 hover:bg-[#161b22] rounded-md text-gray-400 hover:text-white">
+                        <ExternalLink size={20} />
+                    </a>
                 </div>
               </div>
             ))}
