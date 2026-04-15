@@ -9,7 +9,7 @@ const app = express();
 
 // 1. Updated CORS to use your new clean project name
 app.use(cors({
-    origin: ["https://link-shortener-mohit.vercel.app", "http://localhost:5173"] 
+    origin: ["https://lnk-io.vercel.app", "http://localhost:5173"] 
 }));
 
 app.use(express.json());
