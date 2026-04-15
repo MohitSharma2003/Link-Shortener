@@ -7,9 +7,9 @@ import prisma from './db'
 dotenv.config()
 const app = express();
 
-// 1. Production CORS (Replace with your actual Vercel link)
+// 1. Updated CORS to use your new clean project name
 app.use(cors({
-    origin: ["https://your-vercel-project-name.vercel.app", "http://localhost:5173"] 
+    origin: ["https://link-shortener-mohit.vercel.app", "http://localhost:5173"] 
 }));
 
 app.use(express.json());
@@ -50,32 +50,37 @@ app.get('/:code', async (req: Request, res: Response) => {
     const { code } = req.params;
 
     try {
-        // Optimized: Find and Increment in ONE step
-        // We use updateMany or update so the click is registered before the user leaves
-        const link = await prisma.link.update({
-            where: { shortCode: code },
-            data: {
-                clicks: { increment: 1 }
-            }
+        // Step 1: Find the link first (using findFirst avoids the unique constraint error)
+        const link = await prisma.link.findFirst({
+            where: { shortCode: code }
         });
 
         if (link) {
-            // Ensure URL is absolute for redirection
+            // Step 2: Increment the click count using the primary ID (always unique)
+            await prisma.link.update({
+                where: { id: link.id },
+                data: { clicks: { increment: 1 } }
+            });
+
+            // Step 3: Ensure URL is absolute and Redirect
             const targetUrl = link.originalUrl.startsWith('http') 
                 ? link.originalUrl 
                 : `https://${link.originalUrl}`;
                 
             return res.redirect(targetUrl);
         }
+
+        // Fallback for codes not in DB
+        throw new Error("Link not found");
         
     } catch (error) {
-        // If Prisma can't find the record, it throws an error. Catch it here for 404.
-        console.log("Redirect error (Likely 404):", code);
+        console.log("Redirect error for code:", code);
         return res.status(404).send(`
-            <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
-                <h1>404 - Link Not Found</h1>
-                <p>The short link you are looking for doesn't exist or has expired.</p>
-                <a href="https://your-vercel-url.vercel.app">Create a new one</a>
+            <div style="font-family: sans-serif; text-align: center; margin-top: 100px; background: #0d1117; color: white; height: 100vh; padding-top: 50px;">
+                <h1 style="color: #38bdf8; font-size: 3rem;">404</h1>
+                <h2>Link Not Found</h2>
+                <p style="color: #8b949e;">The link you're looking for doesn't exist.</p>
+                <a href="https://link-shortener-mohit.vercel.app" style="color: #38bdf8; text-decoration: none; border: 1px solid #38bdf8; padding: 10px 20px; rounded: 8px;">Create New Link</a>
             </div>
         `);
     }

@@ -121,7 +121,7 @@ function App() {
                     </span>
                   )}
 
-                  <a href={`${API_BASE_URL}/${currentShortLink.shortCode}`} target="_blank" rel="noreferrer" className="p-2 hover:bg-[#0d1117] rounded-md text-gray-400 hover:text-white transition-colors">
+                  <a href={`${API_BASE_URL}/${currentShortLink.shortCode}`} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-[#0d1117] rounded-md text-gray-400 hover:text-white transition-colors">
                     <Link2 size={20} />
                   </a>
                 </div>
@@ -159,7 +159,7 @@ function App() {
                     <button onClick={() => copyToClipboard(link.shortCode)} className="p-2 hover:bg-[#161b22] rounded-md text-gray-400 hover:text-white">
                         <Copy size={20} />
                     </button>
-                    <a href={`${API_BASE_URL}/${link.shortCode}`} target="_blank" rel="noreferrer" className="p-2 hover:bg-[#161b22] rounded-md text-gray-400 hover:text-white">
+                    <a href={`${API_BASE_URL}/${link.shortCode}`} target="_blank" rel="noopener noreferrer" className="p-2 hover:bg-[#161b22] rounded-md text-gray-400 hover:text-white">
                         <ExternalLink size={20} />
                     </a>
                 </div>
