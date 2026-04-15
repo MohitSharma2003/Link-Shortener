@@ -11,7 +11,7 @@ interface LinkRecord {
 }
 
 // Using your live Render URL consistently
-const API_BASE_URL = "https://lnk-io-backend.onrender.com";
+const API_BASE_URL = "https://lnk-io.onrender.com";
 
 function App() {
   const [originalUrl, setOriginalUrl] = useState('')
