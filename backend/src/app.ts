@@ -3,29 +3,25 @@ import dotenv from 'dotenv'
 import cors from 'cors';
 import { generateShortCode } from './services/LinkService'
 import prisma from './db'
-import { log } from 'node:console'
-
-// 1) setup
 
 dotenv.config()
 const app = express();
 
-app.use(cors());
+// 1. Production CORS (Replace with your actual Vercel link)
+app.use(cors({
+    origin: ["https://your-vercel-project-name.vercel.app", "http://localhost:5173"] 
+}));
 
-
-//middleware to parse JSON bodies
 app.use(express.json());
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.get('/', (req: Request, res: Response) => {
-    res.send("Link Shortener is Running")
+    res.send("lnk.io API is Running")
 })
 
-//route for short links
-
+// --- Shorten Route ---
 app.post('/shorten', async (req: Request, res: Response) => {
-    // Change this line to match your Postman/Frontend key
     const { originalUrl } = req.body;
 
     if (!originalUrl) {
@@ -37,54 +33,54 @@ app.post('/shorten', async (req: Request, res: Response) => {
 
         const newLink = await prisma.link.create({
             data: {
-                originalUrl: originalUrl, // Now they match!
+                originalUrl: originalUrl,
                 shortCode: shortCode,
             },
         });
 
         res.status(201).json(newLink);
     } catch (error) {
-        console.error(error);
+        console.error("Create Error:", error);
         res.status(500).json({ error: "Database error" });
     }
 });
-//Route to redirect using the short code
 
+// --- Redirection & Analytics Route ---
 app.get('/:code', async (req: Request, res: Response) => {
-    const code = req.params.code;
-
-    if (typeof code !== 'string') {
-        return res.status(400).json({ error: "Invalid short code" });
-    }
+    const { code } = req.params;
 
     try {
-        const link = await prisma.link.findUnique({
-            where: { shortCode: code }
+        // Optimized: Find and Increment in ONE step
+        // We use updateMany or update so the click is registered before the user leaves
+        const link = await prisma.link.update({
+            where: { shortCode: code },
+            data: {
+                clicks: { increment: 1 }
+            }
         });
 
         if (link) {
-            // Increment the click count in the background
-            await prisma.link.update({
-                where: { id: link.id },
-                data: { clicks: { increment: 1 } }
-            });
-
-            return res.redirect(link.originalUrl);
+            // Ensure URL is absolute for redirection
+            const targetUrl = link.originalUrl.startsWith('http') 
+                ? link.originalUrl 
+                : `https://${link.originalUrl}`;
+                
+            return res.redirect(targetUrl);
         }
         
-        res.status(404).json({ error: "Link not Found"});
-    }catch (error){
-        res.status(500).json({ error: "Server Error during Redirection"})
+    } catch (error) {
+        // If Prisma can't find the record, it throws an error. Catch it here for 404.
+        console.log("Redirect error (Likely 404):", code);
+        return res.status(404).send(`
+            <div style="font-family: sans-serif; text-align: center; margin-top: 50px;">
+                <h1>404 - Link Not Found</h1>
+                <p>The short link you are looking for doesn't exist or has expired.</p>
+                <a href="https://your-vercel-url.vercel.app">Create a new one</a>
+            </div>
+        `);
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-    
+    console.log(`Server is live on port ${PORT}`);
 })
-
-
-
-
-
-
