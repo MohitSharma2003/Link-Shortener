@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
-import { Link2, Copy, Zap, Clock3, Loader2, ExternalLink } from 'lucide-react'
+import { Link2, Copy, Zap, Clock3, Loader2, ExternalLink, RefreshCw } from 'lucide-react'
 
 // Define the shape of our Link object based on your backend schema
 interface LinkRecord {
@@ -18,6 +18,7 @@ function App() {
   const [history, setHistory] = useState<LinkRecord[]>([])
   const [currentShortLink, setCurrentShortLink] = useState<LinkRecord | null>(null)
   const [loading, setLoading] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
   const [showCopiedMessage, setShowCopiedMessage] = useState(false);
 
@@ -41,6 +42,27 @@ function App() {
       setLoading(false)
     }
   }
+
+  // New Function: Fetches latest click counts for the history list
+  const refreshStats = async () => {
+    if (history.length === 0) return;
+    setRefreshing(true);
+    try {
+      const updatedHistory = await Promise.all(
+        history.map(async (link) => {
+          try {
+            const res = await axios.get(`${API_BASE_URL}/stats/${link.shortCode}`);
+            return res.data;
+          } catch {
+            return link; // fallback to old data if stats call fails
+          }
+        })
+      );
+      setHistory(updatedHistory);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const copyToClipboard = (code: string) => {
     const fullUrl = `${API_BASE_URL}/${code}`;
@@ -71,7 +93,6 @@ function App() {
       {/* Main Content Area */}
       <main className="flex-grow max-w-[1700px] mx-auto w-full p-6 md:p-10 grid grid-cols-1 xl:grid-cols-12 gap-10">
         
-        {/* 2. Left Column (Hero & Input) */}
         <section className="xl:col-span-8 flex flex-col justify-center gap-6">
           <div className="space-y-3">
             <h1 className="text-5xl md:text-7xl font-extrabold tracking-tighter leading-tight">
@@ -102,7 +123,6 @@ function App() {
           {error && <p className="text-red-400 mt-2 text-sm">{error}</p>}
         </section>
 
-        {/* 3. Right Column (Active Link Card) */}
         <aside className="xl:col-span-4 space-y-8 xl:mt-20">
           {currentShortLink && (
             <div className="bg-[#161b22]/70 backdrop-blur-xl border border-sky-600/30 p-6 rounded-3xl shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500">
@@ -125,7 +145,6 @@ function App() {
                 </div>
               </div>
               
-              {/* Clickable Short Link text */}
               <a 
                 href={`${API_BASE_URL}/${currentShortLink.shortCode}`} 
                 target="_blank" 
@@ -147,7 +166,14 @@ function App() {
         <div className="bg-[#161b22]/60 backdrop-blur border border-gray-800 p-6 md:p-8 rounded-3xl mt-10 xl:mt-0">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold flex items-center gap-2"><Clock3 className="text-gray-500"/>Recent Infrastructure</h2>
-            <button className="text-sm text-sky-500 hover:underline">View All History</button>
+            <button 
+              onClick={refreshStats}
+              disabled={refreshing || history.length === 0}
+              className="flex items-center gap-2 text-sm text-sky-500 hover:text-sky-400 transition-colors disabled:text-gray-600"
+            >
+              <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
+              {refreshing ? "Syncing..." : "Refresh Stats"}
+            </button>
           </div>
           
           <div className="space-y-3">
@@ -157,7 +183,6 @@ function App() {
                     <Link2 size={24} className="text-sky-600"/>
                 </div>
                 <div className="md:col-span-7 space-y-1">
-                    {/* Clickable Short Link in History */}
                     <a 
                       href={`${API_BASE_URL}/${link.shortCode}`} 
                       target="_blank" 
@@ -187,7 +212,6 @@ function App() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="w-full border-t border-gray-800 p-8 bg-[#0d1117]">
         <div className="max-w-[1700px] mx-auto text-sm text-gray-600 flex justify-between">
           <p>© 2026 Lnk.io Technologies. All rights reserved.</p>

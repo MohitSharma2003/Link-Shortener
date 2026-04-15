@@ -7,7 +7,7 @@ import prisma from './db'
 dotenv.config()
 const app = express();
 
-// 1. Updated CORS to allow both of your Vercel domains
+// 1. CORS setup for both of your Vercel domains
 app.use(cors({
     origin: [
         "https://lnk-io.vercel.app", 
@@ -27,27 +27,42 @@ app.get('/', (req: Request, res: Response) => {
     res.send("lnk.io API is Running")
 })
 
-// 2. Ignore Favicon requests to prevent error logs
+// 2. Ignore Favicon requests to keep logs clean
 app.get('/favicon.ico', (req, res) => res.status(204).end());
+
+// --- New Route: Get Stats without incrementing clicks ---
+// This is what your Frontend's "Refresh Stats" button will call
+app.get('/stats/:code', async (req: Request, res: Response) => {
+    const code = req.params.code as string;
+    try {
+        const link = await prisma.link.findFirst({
+            where: { shortCode: code }
+        });
+
+        if (link) {
+            return res.json(link);
+        }
+        res.status(404).json({ error: "Link not found" });
+    } catch (error) {
+        res.status(500).json({ error: "Database error" });
+    }
+});
 
 // --- Shorten Route ---
 app.post('/shorten', async (req: Request, res: Response) => {
     const { originalUrl } = req.body;
-
     if (!originalUrl) {
         return res.status(400).json({ error: "Please provide originalUrl" });
     }
 
     try {
         const shortCode = generateShortCode();
-
         const newLink = await prisma.link.create({
             data: {
                 originalUrl: originalUrl,
                 shortCode: shortCode,
             },
         });
-
         res.status(201).json(newLink);
     } catch (error) {
         console.error("Create Error:", error);
@@ -57,17 +72,16 @@ app.post('/shorten', async (req: Request, res: Response) => {
 
 // --- Redirection & Analytics Route ---
 app.get('/:code', async (req: Request, res: Response) => {
-    // 3. Cast to string to fix the TypeScript 'string | string[]' error
     const code = req.params.code as string;
 
     try {
-        // Step 1: Find the link first
+        // Step 1: Find the link
         const link = await prisma.link.findFirst({
             where: { shortCode: code }
         });
 
         if (link) {
-            // Step 2: Increment the click count using the primary ID
+            // Step 2: Increment the click count
             await prisma.link.update({
                 where: { id: link.id },
                 data: { clicks: { increment: 1 } }
@@ -80,17 +94,13 @@ app.get('/:code', async (req: Request, res: Response) => {
                 
             return res.redirect(targetUrl);
         }
-
-        // If no link found, throw to the catch block
-        throw new Error("Link not found");
         
+        throw new Error("Not found");
     } catch (error) {
-        console.log("Redirect error for code:", code);
         return res.status(404).send(`
             <div style="font-family: sans-serif; text-align: center; margin-top: 100px; background: #0d1117; color: white; height: 100vh; padding-top: 50px;">
                 <h1 style="color: #38bdf8; font-size: 3rem;">404</h1>
                 <h2>Link Not Found</h2>
-                <p style="color: #8b949e;">The link you're looking for doesn't exist.</p>
                 <a href="https://lnk-io.vercel.app" style="color: #38bdf8; text-decoration: none; border: 1px solid #38bdf8; padding: 10px 20px; border-radius: 8px;">Back to Home</a>
             </div>
         `);
