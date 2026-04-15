@@ -26,10 +26,7 @@ function App() {
     setCurrentShortLink(null)
 
     try {
-      const response = await axios.post("https://lnk-io-backend.onrender.com", {
-        originalUrl: originalUrl
-      })
-      
+      const response = await axios.post("https://lnk-io-backend.onrender.com", { originalUrl });
       const newLink = response.data;
       setCurrentShortLink(newLink);
       // Add the new link to the top of the history list
