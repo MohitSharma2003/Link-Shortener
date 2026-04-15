@@ -10,6 +10,8 @@ interface LinkRecord {
   clicks: number;
 }
 
+// const API_BASE_URL = "https://lnk-io-backend.onrender.com";
+
 function App() {
   const [originalUrl, setOriginalUrl] = useState('')
   const [history, setHistory] = useState<LinkRecord[]>([])
@@ -24,7 +26,7 @@ function App() {
     setCurrentShortLink(null)
 
     try {
-      const response = await axios.post('http://localhost:5000/shorten', {
+      const response = await axios.post("https://lnk-io-backend.onrender.com", {
         originalUrl: originalUrl
       })
       
@@ -109,7 +111,7 @@ function App() {
                   <button onClick={() => copyToClipboard(currentShortLink.shortCode)} className="p-2 hover:bg-[#0d1117] rounded-md text-gray-400 hover:text-white">
                     <Copy size={20} />
                   </button>
-                  <a href={`http://localhost:5000/${currentShortLink.shortCode}`} target="_blank" rel="noreferrer" className="p-2 hover:bg-[#0d1117] rounded-md text-gray-400 hover:text-white">
+                  <a href={`https://lnk-io-backend.onrender.com${currentShortLink.shortCode}`} target="_blank" rel="noreferrer" className="p-2 hover:bg-[#0d1117] rounded-md text-gray-400 hover:text-white">
                     <Link2 size={20} />
                   </a>
                 </div>
